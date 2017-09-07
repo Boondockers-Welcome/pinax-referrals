@@ -13,6 +13,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 
+from dateutil.relativedelta import relativedelta
+
 from .compat import GenericForeignKey
 from .conf import settings
 from .signals import user_linked_to_response
@@ -102,10 +104,11 @@ class Referral(models.Model):
 
     @classmethod
     def referral_for_request(cls, request):
+        unexpired_date = timezone.now() - relativedelta(days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS)
         if request.user.is_authenticated():
-            qs = ReferralResponse.objects.filter(user=request.user)
+            qs = ReferralResponse.objects.filter(user=request.user, created_at__gte=unexpired_date)
         else:
-            qs = ReferralResponse.objects.filter(session_key=request.session.session_key)
+            qs = ReferralResponse.objects.filter(session_key=request.session.session_key, created_at__gte=unexpired_date)
 
         try:
             return qs.order_by("-created_at")[0].referral
@@ -152,7 +155,7 @@ class ReferralResponse(models.Model):
 
     referral = models.ForeignKey(Referral, related_name="responses")
     session_key = models.CharField(max_length=40)
-    user = models.ForeignKey(AUTH_USER_MODEL, null=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     ip_address = models.CharField(max_length=45)
     action = models.CharField(max_length=128)
 

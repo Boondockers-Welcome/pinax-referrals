@@ -12,6 +12,7 @@ class PinaxReferralsAppConf(AppConf):
     ACTION_DISPLAY = {"RESPONDED": "Clicked on referral link"}
     CODE_GENERATOR_CALLBACK = "pinax.referrals.callbacks.generate_code"
     RESPONSES_FILTER_CALLBACK = "pinax.referrals.callbacks.filter_responses"
+    EXPIRE_RESPONSE_DAYS = 60
 
     def configure_code_generator_callback(self, value):
         return load_path_attr(value)
