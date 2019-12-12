@@ -3,8 +3,9 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
-
 from django.contrib.contenttypes.models import ContentType
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 try:
     from account.decorators import login_required
@@ -56,9 +57,13 @@ def process_referral(request, code):
     except KeyError:
         response = redirect(referral.redirect_to)
     if request.user.is_anonymous():
+        expiry_date_utc = datetime.now() + relativedelta(
+            days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS
+        )
         response.set_cookie(
             "pinax-referral",
-            "%s:%s" % (code, session_key)
+            "%s:%s" % (code, session_key),
+            expires=expiry_date_utc
         )
     else:
         response.delete_cookie("pinax-referral")
