@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
+from django.urls import NoReverseMatch
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
@@ -54,7 +55,7 @@ def process_referral(request, code):
         response = redirect(request.GET[
             getattr(settings, "PINAX_REFERRALS_REDIRECT_ATTRIBUTE", "redirect_to")]
         )
-    except KeyError:
+    except (KeyError, NoReverseMatch):
         response = redirect(referral.redirect_to)
     if request.user.is_anonymous():
         expiry_date_utc = datetime.now() + relativedelta(
