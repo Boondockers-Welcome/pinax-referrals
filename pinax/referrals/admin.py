@@ -22,6 +22,7 @@ admin.site.register(
     ReferralResponse,
     list_display=[
         "referral",
+        "created_at",
         "session_key",
         "user",
         "ip_address",
