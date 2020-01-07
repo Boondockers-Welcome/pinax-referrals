@@ -5,7 +5,7 @@ from django.urls import NoReverseMatch
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
-from datetime import datetime
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 
 try:
@@ -58,7 +58,7 @@ def process_referral(request, code):
     except (KeyError, NoReverseMatch):
         response = redirect(referral.redirect_to)
     if request.user.is_anonymous():
-        expiry_date_utc = datetime.now() + relativedelta(
+        expiry_date_utc = timezone.now() + relativedelta(
             days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS
         )
         response.set_cookie(
