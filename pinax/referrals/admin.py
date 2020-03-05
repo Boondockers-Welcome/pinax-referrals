@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from .models import Referral, ReferralResponse
 
-
 admin.site.register(
     Referral,
     list_display=[
@@ -15,7 +14,7 @@ admin.site.register(
     ],
     readonly_fields=["code", "created_at"],
     list_filter=["target_content_type", "created_at"],
-    search_fields=["user", "code"]
+    search_fields=["user__first_name", "user__last_name", "user__email", "user__username", "code"]
 )
 
 admin.site.register(

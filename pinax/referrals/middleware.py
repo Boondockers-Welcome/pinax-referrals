@@ -6,6 +6,11 @@ except ImportError:
 
 from .models import Referral
 
+try:
+    from django.utils.deprecation import MiddlewareMixin as MIDDLEWARE_BASE_CLASS
+except ImportError:
+    MIDDLEWARE_BASE_CLASS = object
+
 
 class SessionJumpingMiddleware(MIDDLEWARE_BASE_CLASS):
 
@@ -16,7 +21,7 @@ class SessionJumpingMiddleware(MIDDLEWARE_BASE_CLASS):
                 "before pinax.referrals.middleware.SessionJumpingMiddleware"
             )
         cookie = request.COOKIES.get("pinax-referral")
-        if request.user.is_authenticated() and cookie:
+        if request.user.is_authenticated and cookie:
             code, session_key = cookie.split(":")
 
             try:

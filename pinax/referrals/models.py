@@ -1,24 +1,16 @@
 from __future__ import unicode_literals
 
-from django.db import models
-from django.db.models.deletion import CASCADE
-
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
-
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from dateutil.relativedelta import relativedelta
 
-from .compat import GenericForeignKey
 from .conf import settings
 from .signals import user_linked_to_response
-
 
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
@@ -28,15 +20,16 @@ class Referral(models.Model):
 
     user = models.ForeignKey(
         AUTH_USER_MODEL,
-        on_delete=CASCADE,
+        on_delete=models.SET_NULL,
         related_name="referral_codes",
-        null=True
+        null=True,
+        blank=True
     )
     label = models.CharField(max_length=100, blank=True)
     code = models.CharField(max_length=40, unique=True)
     expired_at = models.DateTimeField(null=True, blank=True)
     redirect_to = models.CharField(max_length=512)
-    target_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    target_content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.SET_NULL)
     target_object_id = models.PositiveIntegerField(null=True, blank=True)
     target = GenericForeignKey(
         ct_field="target_content_type",
@@ -63,7 +56,7 @@ class Referral(models.Model):
 
     @property
     def url(self):
-        path = reverse("pinax_referrals_process_referral", kwargs={"code": self.code})
+        path = reverse("pinax_referrals:process_referral", kwargs={"code": self.code})
         domain = Site.objects.get_current().domain
         protocol = "https" if settings.PINAX_REFERRALS_SECURE_URLS else "http"
         return "{}://{}{}".format(protocol, domain, path)
@@ -123,7 +116,7 @@ class Referral(models.Model):
 
     def respond(self, request, action_string, user=None, target=None):
         if user is None:
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 user = request.user
             else:
                 user = None
@@ -153,13 +146,13 @@ class Referral(models.Model):
 
 class ReferralResponse(models.Model):
 
-    referral = models.ForeignKey(Referral, related_name="responses")
+    referral = models.ForeignKey(Referral, related_name="responses", on_delete=models.CASCADE)
     session_key = models.CharField(max_length=40)
     user = models.ForeignKey(AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
-    ip_address = models.CharField(max_length=90)
+    ip_address = models.CharField(max_length=265)
     action = models.CharField(max_length=128)
 
-    target_content_type = models.ForeignKey(ContentType, null=True)
+    target_content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
     target_object_id = models.PositiveIntegerField(null=True)
     target = GenericForeignKey(
         ct_field="target_content_type",
