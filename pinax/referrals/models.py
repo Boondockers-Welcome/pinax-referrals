@@ -98,7 +98,7 @@ class Referral(models.Model):
     @classmethod
     def referral_for_request(cls, request):
         unexpired_date = timezone.now() - relativedelta(days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS)
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             qs = ReferralResponse.objects.filter(user=request.user, created_at__gte=unexpired_date)
         else:
             qs = ReferralResponse.objects.filter(session_key=request.session.session_key, created_at__gte=unexpired_date)
