@@ -126,10 +126,13 @@ class Referral(models.Model):
             ""
         )
 
+        referral_url = request.META.get('HTTP_REFERER', '')
+
         kwargs = dict(
             referral=self,
             session_key=request.session.session_key,
             ip_address=ip_address,
+            referral_url=referral_url,
             action=action_string,
             user=user
         )
@@ -150,6 +153,7 @@ class ReferralResponse(models.Model):
     session_key = models.CharField(max_length=40)
     user = models.ForeignKey(AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     ip_address = models.CharField(max_length=265)
+    referral_url = models.CharField(max_length=400, default='')
     action = models.CharField(max_length=128)
 
     target_content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)

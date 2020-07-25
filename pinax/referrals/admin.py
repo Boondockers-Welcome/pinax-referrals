@@ -22,12 +22,12 @@ admin.site.register(
     list_display=[
         "referral",
         "created_at",
-        "session_key",
         "user",
         "ip_address",
+        "referral_url",
         "action"
     ],
-    readonly_fields=["referral", "session_key", "user", "ip_address", "action"],
+    readonly_fields=["referral", "session_key", "user", "ip_address", "action", "referral_url"],
     list_filter=["action", "created_at"],
     search_fields=["referral__code", "referral__user__username", "ip_address"]
 )
