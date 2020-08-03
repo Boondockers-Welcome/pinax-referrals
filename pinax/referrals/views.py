@@ -48,23 +48,34 @@ def create_referral(request):
 
 
 def process_referral(request, code):
-    referral = get_object_or_404(Referral, code=code)
-    session_key = ensure_session_key(request)
-    referral.respond(request, "RESPONDED")
+    try:
+        referral = Referral.objects.get(code=code)
+        session_key = ensure_session_key(request)
+        referral.respond(request, "RESPONDED")
+    except Referral.DoesNotExist:
+        referral = None
+        session_key = None
+
     try:
         response = redirect(request.GET[
             getattr(settings, "PINAX_REFERRALS_REDIRECT_ATTRIBUTE", "redirect_to")]
         )
     except (KeyError, NoReverseMatch):
-        response = redirect(referral.redirect_to)
-        expiry_date_utc = timezone.now() + relativedelta(
-            days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS
-        )
-        response.set_cookie(
-            "pinax-referral",
-            "%s:%s" % (code, session_key),
-            expires=expiry_date_utc
-        )
+        if referral is not None:
+            response = redirect(referral.redirect_to)
+        else:
+            response = redirect('/')
+
+    if request.user.is_anonymous:
+        if session_key is not None:
+            expiry_date_utc = timezone.now() + relativedelta(
+                days=settings.PINAX_REFERRALS_EXPIRE_RESPONSE_DAYS
+            )
+            response.set_cookie(
+                "pinax-referral",
+                "%s:%s" % (code, session_key),
+                expires=expiry_date_utc
+            )
     else:
         response.delete_cookie("pinax-referral")
 
