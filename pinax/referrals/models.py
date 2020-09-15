@@ -127,6 +127,8 @@ class Referral(models.Model):
         )
 
         referral_url = request.META.get('HTTP_REFERER', '')
+        if len(referral_url) >= 400:
+            referral_url = referral_url[:397] + '...'
 
         kwargs = dict(
             referral=self,
